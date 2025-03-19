@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>parkIN - Smart Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeIn 1s ease-out; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-black text-white">
+
+    <!-- 🌍 Navbar -->
+    <header class="flex justify-between items-center p-5">
+        <h1 class="text-3xl font-bold">
+            <span class="text-green-500 font-poppins font-bold">p</span>arkIN
+        </h1>
+        <nav class="space-x-6">
+            <a href="#" class="hover:text-green-500 transition">Home</a>
+            <a href="#" class="hover:text-green-500 transition">Pre Booking</a>
+            <a href="#" class="hover:text-green-500 transition">About Us</a>
+            <a href="#" class="hover:text-green-500 transition">Contact Us</a>
+            <a href="bookings.html" class="hover:text-green-500 transition">Your Bookings</a>
+            <a href="login2.html" class="px-4 py-2 bg-green-500 text-black rounded-lg hover:bg-green-600 font-bold">
+                Login
+            </a>
+        </nav>
+    </header>
+
+    <!-- 🌟 Hero Section -->
+    <section class="text-center flex flex-col items-center mt-20">
+        <h2 class="text-5xl font-bold animate-fade">
+            The Smart Way to Park with <span class="text-green-500 ">p</span>arkIN
+        </h2>
+        <p class="mt-4 text-gray-400 text-lg animate-fade">Find, book, and park effortlessly!</p>
+
+        <button id="reserveBtn" class="mt-6 px-6 py-3 bg-green-500 text-black rounded-lg font-bold text-lg hover:bg-green-600 transition animate-fade">
+            Reserve a Parking Slot
+        </button>
+
+        <!-- 🔍 Search Bar (Hidden Initially) -->
+        <div id="searchContainer" class="hidden flex flex-col items-center mt-6 w-full max-w-md">
+            <input id="locationInput" type="text" placeholder="Enter your location" class="w-full px-4 py-2 text-black rounded-lg" oninput="showSuggestions()">
+            <button id="useLocationBtn" class="mt-3 px-4 py-2 bg-gray-700 rounded-lg text-white hover:bg-gray-600 transition">
+                Use Your Current Location
+            </button>
+
+            <!-- 🗺️ Suggested Locations -->
+            <ul id="suggestions" class="bg-gray-800 text-white w-full mt-2 rounded-lg hidden"></ul>
+        </div>
+    </section>
+
+    <!-- 📌 Parking Slots (Hidden Initially) -->
+    <div id="parkingSlots" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mt-12 px-10">
+        <div class="p-6 bg-gray-900 rounded-lg animate-fade parking-lot" data-lot="1">
+            <h4 class="text-2xl font-semibold">Parking Lot 1</h4>
+            <p>🅿️ <b>Owner:</b> John Doe</p>
+            <p>📍 <b>Distance:</b> 500m away</p>
+            <p>💰 <b>Rate:</b> ₹50/hour</p>
+            <p>🔋 <b>EV Charging:</b> Available ✅</p>
+            <p>🔗 <button class="text-green-500 book-btn">Book Now</button></p>
+        </div>
+        <div class="p-6 bg-gray-900 rounded-lg animate-fade parking-lot" data-lot="2">
+            <h4 class="text-2xl font-semibold">Parking Lot 2</h4>
+            <p>🅿️ <b>Owner:</b> City Parking Hub</p>
+            <p>📍 <b>Distance:</b> 1.2km away</p>
+            <p>💰 <b>Rate:</b> ₹40/hour</p>
+            <p>🛡️ <b>Security:</b> 24/7 Surveillance ✅</p>
+            <p>🔗 <button class="text-green-500 book-btn">Book Now</button></p>
+        </div>
+        <div class="p-6 bg-gray-900 rounded-lg animate-fade">
+            <h4 class="text-2xl font-semibold">Parking Lot 3</h4>
+            <p>🅿️ <b>Owner:</b> Mall Parking Zone</p>
+            <p>📍 <b>Distance:</b> 800m away</p>
+            <p>💰 <b>Rate:</b> ₹60/hour</p>
+            <p>🚗 <b>Covered Parking:</b> Yes ✅</p>
+            <p>🔗 <a href="#" class="text-green-500">Book Now</a></p>
+        </div>
+        <div class="p-6 bg-gray-900 rounded-lg animate-fade">
+            <h4 class="text-2xl font-semibold">Parking Lot 4</h4>
+            <p>🅿️ <b>Owner:</b> Green Parking Space</p>
+            <p>📍 <b>Distance:</b> 300m away</p>
+            <p>💰 <b>Rate:</b> ₹30/hour</p>
+            <p>🌱 <b>Eco-Friendly:</b> Solar-powered</p>
+            <p>🔗 <a href="#" class="text-green-500">Book Now</a></p>
+        </div>
+        
+    </div>
+
+    <!-- 🏢 Detailed Parking Plot View (Hidden Initially) -->
+    <div id="parkingDetail" class="hidden p-6 bg-gray-900 rounded-lg max-w-lg mx-auto mt-12 animate-fade">
+        <h3 id="parkingTitle" class="text-3xl font-semibold"></h3>
+        <p id="parkingOwner" class="mt-2"></p>
+        <p id="parkingDistance"></p>
+        <p id="parkingRate"></p>
+        <p id="parkingFeatures"></p>
+        <p id="parkingSlotsCount" class="font-bold text-yellow-400"></p>
+
+        <input type="time" id="bookingTime" placeholder="Enter Time You Want To Book For" class="w-full px-4 py-2 text-black rounded-lg mt-4">
+        <p id="estimatedFare" class="mt-4 font-semibold text-yellow-400"></p>
+    <!-- 🆕 Available Slots Section -->
+    <p id="parkingSlotsCount" class="font-bold text-yellow-400"></p>
+
+    <!-- 🛒 Negotiation Section -->
+    <p class="mt-4 font-semibold">Do you want to negotiate with the price?</p>
+    <div class="flex space-x-4 mt-2">
+        <label class="cursor-pointer">
+            <input type="radio" name="negotiate" value="yes" class="mr-1"> Yes
+        </label>
+        <label class="cursor-pointer">
+            <input type="radio" name="negotiate" value="no" class="mr-1"> No
+        </label>
+    </div>
+
+    <!-- 🎯 Negotiation Input & Offer Button (Hidden Initially) -->
+    <div id="negotiateSection" class="hidden mt-4">
+        <input type="text" id="negotiatedFare" placeholder="Enter Your Fare" class="w-2/3 px-4 py-2 text-black rounded-lg">
+        <button id="offerFareBtn" class="px-4 py-2 bg-blue-500 text-black rounded-lg font-bold hover:bg-blue-600 transition">
+            Offer Fare
+        </button>
+    </div>
+
+    <!--booknow button -->
+    <div class="flex justify-center mt-4">
+        <button id="bookNowBtn" class="px-4 py-2 bg-green-500 text-black rounded-lg font-bold hover:bg-green-600 transition">
+            Book Now
+        </button>
+    </div>
+
+    <!-- Progress Bar UI -->
+<div id="progressContainer" class="hidden mt-4 w-full bg-gray-700 rounded-lg relative">
+    <div id="progressBar" class="h-2 bg-green-500 w-full absolute top-0 left-0"></div>
+</div>
+<p id="ownerResponse" class="hidden mt-2 font-bold text-center"></p>
+
+<!-- Confirm Booking Button (Initially Hidden) -->
+<div class="flex justify-center mt-4">
+    <button id="confirmBookingBtn" class="hidden px-4 py-2 bg-blue-500 text-black rounded-lg font-bold hover:bg-blue-600 transition">
+        Confirm Booking
+    </button>
+</div>
+
+    </div>
+
+
+        <!-- 🔥 Features Section -->
+        <section class="mt-20 text-center">
+            <h3 class="text-4xl font-bold animate-fade">Why Choose <span class="text-green-500">p</span>arkIN?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 px-10">
+                <div class="p-6 bg-gray-900 rounded-lg animate-fade hover:scale-105 transition">
+                    <h4 class="text-2xl font-semibold">Easy Booking</h4>
+                    <p class="text-gray-400 mt-2">Find & book parking spots instantly.</p>
+                </div>
+                <div class="p-6 bg-gray-900 rounded-lg animate-fade hover:scale-105 transition">
+                    <h4 class="text-2xl font-semibold">Secure Payments</h4>
+                    <p class="text-gray-400 mt-2">Fast and safe online payments.</p>
+                </div>
+                <div class="p-6 bg-gray-900 rounded-lg animate-fade hover:scale-105 transition">
+                    <h4 class="text-2xl font-semibold">Real-Time Availability</h4>
+                    <p class="text-gray-400 mt-2">See available spots live on the map.</p>
+                </div>
+            </div>
+        </section>
+
+    <!-- 🌍 Footer -->
+    <footer class="mt-20 p-6 text-center bg-gray-900">
+        <p class="text-gray-400">&copy; 2025 <span class="text-green-500">p</span>arkIN. All rights reserved.</p>
+    </footer>
+
+    <!-- 🎯 JavaScript -->
+    <script>
+        document.getElementById('reserveBtn').addEventListener('click', function() {
+            document.getElementById('searchContainer').classList.remove('hidden');
+        });
+
+        const suggestedLocations = ["Park Street", "City Mall Parking", "Green Valley Parking", "Downtown Parking Hub"];
+
+        function showSuggestions() {
+            const input = document.getElementById('locationInput').value.toLowerCase();
+            const suggestionBox = document.getElementById('suggestions');
+            suggestionBox.innerHTML = "";
+
+            if (input === "") {
+                suggestionBox.classList.add('hidden');
+                return;
+            }
+
+            suggestedLocations.forEach(location => {
+                if (location.toLowerCase().includes(input)) {
+                    const li = document.createElement('li');
+                    li.textContent = location;
+                    li.classList.add("px-4", "py-2", "hover:bg-gray-600", "cursor-pointer");
+                    li.onclick = function() {
+                        document.getElementById('locationInput').value = location;
+                        suggestionBox.classList.add('hidden');
+                        document.getElementById('parkingSlots').classList.remove('hidden');
+                    };
+                    suggestionBox.appendChild(li);
+                }
+            });
+
+            suggestionBox.classList.remove('hidden');
+        }
+
+        document.querySelectorAll('.book-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const parkingLot = this.closest('.parking-lot');
+                document.getElementById('parkingSlots').classList.add('hidden');
+                document.getElementById('parkingDetail').classList.remove('hidden');
+
+                document.getElementById('parkingTitle').textContent = parkingLot.children[0].textContent;
+                document.getElementById('parkingOwner').textContent = parkingLot.children[1].textContent;
+                document.getElementById('parkingDistance').textContent = parkingLot.children[2].textContent;
+                document.getElementById('parkingRate').textContent = parkingLot.children[3].textContent;
+                document.getElementById('parkingFeatures').textContent = parkingLot.children[4].textContent;
+
+                const availableSlots = Math.floor(Math.random() * 16);
+            document.getElementById('parkingSlotsCount').textContent = `Available Slots: ${availableSlots}`;
+            });
+        });
+
+        // Negotiation Logic
+        document.querySelectorAll('input[name="negotiate"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const negotiateSection = document.getElementById('negotiateSection');
+            if (this.value === "yes") {
+                negotiateSection.classList.remove('hidden');
+            } else {
+                negotiateSection.classList.add('hidden');
+            }
+        });
+    });
+
+    //new section
+    document.getElementById('offerFareBtn').addEventListener('click', function () {
+        let progressBar = document.getElementById('progressBar');
+        let progressContainer = document.getElementById('progressContainer');
+        let ownerResponse = document.getElementById('ownerResponse');
+        let confirmBookingBtn = document.getElementById('confirmBookingBtn');
+        let bookNowBtn = document.getElementById('bookNowBtn');
+
+        // Show progress bar and initial message
+        progressContainer.classList.remove('hidden');
+        ownerResponse.classList.remove('hidden');
+        ownerResponse.textContent = "Plot Owner Is Viewing Your Request...";
+        ownerResponse.classList.remove("text-green-500", "text-red-500");
+
+        // Reset progress bar width
+        progressBar.style.width = "100%";
+
+        let width = 100;
+        let interval = setInterval(() => {
+            if (width > 0) {
+                width -= 2;
+                progressBar.style.width = width + "%";
+            } else {
+                clearInterval(interval);
+
+                // Owner's decision (50-50 chance)
+                let accepted = Math.random() < 0.5;
+                if (accepted) {
+                    ownerResponse.textContent = "Owner Accepted Your Request!";
+                    ownerResponse.classList.add("text-green-500");
+                    confirmBookingBtn.classList.remove('hidden');
+                } else {
+                    ownerResponse.textContent = "Owner Rejected Your Request.";
+                    ownerResponse.classList.add("text-red-500");
+                }
+            }
+        }, 100); // Animation speed
+
+        // Redirect to payment when Confirm Booking is clicked
+        confirmBookingBtn.addEventListener('click', function () {
+            window.location.href = "payment.html";
+        });
+
+        // Ensure Book Now button also redirects if rejected
+        bookNowBtn.addEventListener('click', function () {
+            window.location.href = "payment.html";
+        });
+    });
+    document.getElementById('bookingTime').addEventListener('input', function () {
+        let timeInput = this.value;
+        let rateText = document.getElementById('parkingRate').textContent; // Example: "💰 Rate: ₹50/hour"
+        let rate = parseInt(rateText.match(/\d+/)); // Extract numeric value
+
+        if (timeInput) {
+            let [hours, minutes] = timeInput.split(':').map(Number);
+            let totalHours = hours + (minutes / 60); // Convert time into hours
+            let estimatedFare = Math.ceil(totalHours) * rate; // Round up and calculate fare
+
+            document.getElementById('estimatedFare').textContent = `Your Estimated Fare Is ₹${estimatedFare}`;
+        } else {
+            document.getElementById('estimatedFare').textContent = "";
+        }
+    });
+    </script>
+
+</body>
+</html>

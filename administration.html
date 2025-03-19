@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>parkIN Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Sidebar Styling */
+        aside {
+            min-height: 100vh; /* Full height */
+        }
+        
+        .tab {
+            padding: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        
+        .tab:hover {
+            background-color: #16a34a;
+        }
+        
+        .active-tab {
+            background-color: #16a34a;
+        }
+        
+        /* Stats Box */
+        .stat-box {
+            padding: 20px;
+            background: #1f2937;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+        
+        .stat-box span {
+            display: block;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        
+        /* Charts */
+        .chart-box {
+            padding: 15px;
+            background: #1f2937;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .chart-box canvas {
+            width: 100% !important;
+            height: 220px !important; /* Smaller Chart */
+        }
+        </style>
+</head>
+<body class="bg-gray-900 text-white font-poppins">
+
+    <!-- Container -->
+    <div class="flex h-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-1/5 bg-gray-800 p-6 flex flex-col h-screen">
+            <h2 class="text-2xl font-bold text-green-500">park<span class="text-white">IN</span> Admin</h2>
+            <nav class="mt-8">
+                <ul>
+                    <li id="dashboardTab" class="tab active-tab" onclick="showPage('dashboard', 'dashboardTab')">Dashboard</li>
+                    <li id="bookingsTab" class="tab" onclick="showPage('bookings', 'bookingsTab')">Bookings</li>
+                    <li class="tab">Payments</li>
+                    <li class="tab">Settings</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="w-4/5 p-6 overflow-auto">
+
+            <!-- Dashboard -->
+            <section id="dashboard">
+                <h1 class="text-3xl font-bold">Dashboard Overview</h1>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-4 gap-6 mt-6">
+                    <div class="stat-box">120<br><span>Approved Users</span></div>
+                    <div class="stat-box">45<br><span>Active Users</span></div>
+                    <div class="stat-box">15<br><span>Unapproved Users</span></div>
+                    <div class="stat-box">$5,670<br><span>Earnings</span></div>
+                </div>
+
+                <!-- Parking Stats -->
+                <div class="grid grid-cols-3 gap-6 mt-6">
+                    <div class="stat-box">250<br><span>Total Parkings</span></div>
+                    <div class="stat-box">85<br><span>Running Parkings</span></div>
+                    <div class="stat-box">30<br><span>Cancelled Parkings</span></div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-2 gap-6 mt-6">
+                    <div class="chart-box">
+                        <h2>Total Parking Analysis</h2>
+                        <canvas id="barChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h2>Customer Approval Rate</h2>
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bookings -->
+            <section id="bookings" class="hidden">
+                <h1 class="text-3xl font-bold">Parking Bookings</h1>
+                <div class="grid grid-cols-3 gap-6 mt-6" id="parkingSlots"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <script >
+        // Function to switch pages & update sidebar
+function showPage(page, tabId) {
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('bookings').classList.add('hidden');
+    document.getElementById(page).classList.remove('hidden');
+
+    // Highlight active tab
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
+    document.getElementById(tabId).classList.add('active-tab');
+}
+
+// Parking Slot Data
+const parkingSlots = [
+    { id: 1, user: "John Doe", userId: "#1001", carModel: "Tesla Model 3", carNumber: "WB 06 A 1234", phone: "+91 98765 43210", duration: "2 Hours" },
+    { id: 2, user: "Alice Smith", userId: "#1002", carModel: "Hyundai Creta", carNumber: "KA 04 AB 5678", phone: "+91 97654 32109", duration: "5 Hours" },
+    { id: 3, available: true },
+    { id: 4, user: "Michael Brown", userId: "#1003", carModel: "Honda Civic", carNumber: "MH 12 CD 3456", phone: "+91 91234 56789", duration: "3 Hours" },
+    { id: 5, available: true },
+];
+
+const container = document.getElementById("parkingSlots");
+
+parkingSlots.forEach(slot => {
+    let slotDiv = document.createElement("div");
+    slotDiv.className = "p-4 bg-gray-800 rounded-lg shadow-lg";
+
+    if (slot.available) {
+        slotDiv.innerHTML = `
+            <h3 class="text-xl font-bold text-green-500">Slot ${slot.id}</h3>
+            <p class="text-gray-300 mt-2">Available for Booking</p>
+        `;
+    } else {
+        slotDiv.innerHTML = `
+            <h3 class="text-xl font-bold text-green-500">Slot ${slot.id}</h3>
+            <p><strong>User:</strong> ${slot.user} (${slot.userId})</p>
+            <p><strong>Car:</strong> ${slot.carModel} - ${slot.carNumber}</p>
+            <p><strong>Phone:</strong> ${slot.phone}</p>
+            <p><strong>Duration:</strong> ${slot.duration}</p>
+        `;
+    }
+
+    container.appendChild(slotDiv);
+});
+
+// Charts
+const ctx1 = document.getElementById("barChart").getContext("2d");
+new Chart(ctx1, {
+    type: "bar",
+    data: {
+        labels: ["Jan", "Feb", "Mar", "Apr", "May"],
+        datasets: [{ label: "Total Parkings", data: [50, 75, 100, 120, 150], backgroundColor: "green" }]
+    }
+});
+
+const ctx2 = document.getElementById("pieChart").getContext("2d");
+new Chart(ctx2, {
+    type: "pie",
+    data: {
+        labels: ["Approved", "Pending"],
+        datasets: [{ data: [80, 20], backgroundColor: ["green", "gray"] }]
+    }
+});
+
+    </script>
+
+</body>
+</html>
+
+
